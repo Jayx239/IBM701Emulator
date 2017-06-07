@@ -8,8 +8,8 @@ commercial scientific computer. This computer was announced on April 29, 1952 an
 in the development of military aircrafts to be used in the korean war.
 For more information see: https://en.wikipedia.org/wiki/IBM_701
 
-Architecture:
-Memory:
+### Architecture:
+#### Memory:
 	
     *72 williams cathode tubes, 1024 bits each
 		
@@ -17,7 +17,7 @@ Memory:
 		
         *36 bit words
 
-Instructions:
+#### Instructions:
 	
     *18 bits long
 		
@@ -27,15 +27,15 @@ Instructions:
 		
         * 12 bit address
 
-Program Accessible Registers:
+#### Program Accessible Registers:
 	
     * accumulator: 38 bit
 	
     * multiplier/quotient: 36 bits
 
-Instructions:
+### Instructions:
 
-0000 STOP      Stop and Transfer        Halt; restart address = addr
+0000 STOP	Stop and Transfer        Halt; restart address = addr
 
 00001 TR        Transfer                 Jump to (addr)
 
