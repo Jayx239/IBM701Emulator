@@ -1,9 +1,6 @@
 #all: assembler emulator
 
-#assembler:  assembler.o
-#	gcc assembler.c -o assembler
-
-emulator: emulator.o
-	gcc emulator.c -o emulator assembler.h program_counter.h bitmath.h
+emulator: emulator.o assembler.o program_counter.o bitmath.o
+	gcc emulator.c -o emulator assembler.o program_counter.o bitmath.o -g
 clean:
-	rm emulator assembler
+	rm emulator emulator.o bitmath.o program_counter.o assembler.o

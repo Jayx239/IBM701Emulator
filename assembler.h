@@ -8,9 +8,9 @@ struct opcode {
     char* key;
 };
 
-struct opcode* generate_opcodes();
+void generate_opcodes(struct opcode opcodes[]);
 void display_opcodes();
 void print_binary(int value);
-struct opcode* get_opcode(char* code, struct opcode* opcodes);
+struct opcode get_opcode(char* code, struct opcode opcodes[]);
 
 #endif

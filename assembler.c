@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 #include "assembler.h"
 
-int main(int argc, char* argv[])
+/*int main(int argc, char* argv[])
 {   
     int in_fd = 0;
     if(argc > 1)
@@ -17,12 +18,10 @@ int main(int argc, char* argv[])
     generate_opcodes(opcodes);
     display_opcodes(opcodes);
     return 0;
-}
+}*/
 
-struct opcode*  generate_opcodes()
+void  generate_opcodes(struct opcode opcodes[])
 {
-    struct opcode opcodes[24];
-
     opcodes[0].value = 0b00000;
     opcodes[1].value = 0b00001;
     opcodes[2].value = 0b00010;
@@ -72,8 +71,6 @@ struct opcode*  generate_opcodes()
     opcodes[21].key = "LRIGHT";    // Long right shift
     opcodes[22].key = "ALEFT";     // Accumulator left shift
     opcodes[23].key = "ARIGHT";    // Accumulator right shift
-
-    return (struct opcode*) opcodes;
 }
 
 void display_opcodes(struct opcode opcodes[])
@@ -103,10 +100,10 @@ struct opcode get_opcode(char* code, struct opcode* opcodes)
 {
     for(int i=0; i<NUM_OPCODES; i++)
     {
-        if(strcmp(opcodes[i]->key,code) == 0)
+        if(strcmp(opcodes[i].key,code) == 0)
         {
             return opcodes[i];
         }
     }
-    return (opcode) NULL;
+    return opcodes[0];
 }

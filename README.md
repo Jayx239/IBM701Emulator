@@ -7,7 +7,15 @@ This emulator simulates an IBM 701, originally known as the Defense Calculator. 
 commercial scientific computer. This computer was announced on April 29, 1952 and its main purpose was to aid
 in the development of military aircrafts to be used in the korean war.
 For more information see: https://en.wikipedia.org/wiki/IBM_701
+### Emulator commands
+Command Description
+quit    Exits the emulator
 
+ppc     Prints program counter details
+
+sv      Set value, must hit enter before entring value
+
+ex      Execute instruction at current memory address
 ### Architecture:
 #### Memory:
 	
