@@ -49,28 +49,55 @@ void  generate_opcodes(struct opcode opcodes[])
 
     opcodes[0].key = "STOP";         //stop
     opcodes[1].key = "TR";         //transfer
-    opcodes[2].key = "TROF";       //transfer on overflow
-    opcodes[3].key = "TR+";        // Transfer on plus
-    opcodes[4].key = "TR0";        // Transfer on 0  
+    opcodes[2].key = "TR OV";       //transfer on overflow
+    opcodes[3].key = "TR +";        // Transfer on plus
+    opcodes[4].key = "TR 0";        // Transfer on 0  
     opcodes[5].key = "SUB";        // Subtract
-    opcodes[6].key = "RSUB";       // Reset and subtract
-    opcodes[7].key = "SUBAB";      // Subtract absolute value
+    opcodes[6].key = "R SUB";       // Reset and subtract
+    opcodes[7].key = "SUB AB";      // Subtract absolute value
     opcodes[8].key = "ADD";        // Add
-    opcodes[9].key = "RADD";       // Reset and add
-    opcodes[10].key = "ADDAB";     // Add absolute
+    opcodes[9].key = "R ADD";       // Reset and add
+    opcodes[10].key = "ADD AB";     // Add absolute
     opcodes[11].key = "STORE";     // Store
-    opcodes[12].key = "STOREA";    // Store address
+    opcodes[12].key = "STORE A";    // Store address
     opcodes[13].key = "EXTR";      // Extract
-    opcodes[14].key = "STOREMQ";   // Store MQ
-    opcodes[15].key = "LOADMQ";    // Load MQ
+    opcodes[14].key = "STORE MQ";   // Store MQ
+    opcodes[15].key = "LOAD MQ";    // Load MQ
     opcodes[16].key = "MPY";       // Multiply
-    opcodes[17].key = "MPYROUND";  //Mutiply and Round
+    opcodes[17].key = "MPY ROUND";  //Mutiply and Round
     opcodes[18].key = "DIV";       // Divide
     opcodes[19].key = "ROUND";     //Round
-    opcodes[20].key = "LLEFT";     // Long left shift
-    opcodes[21].key = "LRIGHT";    // Long right shift
-    opcodes[22].key = "ALEFT";     // Accumulator left shift
-    opcodes[23].key = "ARIGHT";    // Accumulator right shift
+    opcodes[20].key = "L LEFT";     // Long left shift
+    opcodes[21].key = "L RIGHT";    // Long right shift
+    opcodes[22].key = "A LEFT";     // Accumulator left shift
+    opcodes[23].key = "A RIGHT";    // Accumulator right shift
+
+    opcodes[0].key_size = 4;
+    opcodes[1].key_size = 2;
+    opcodes[2].key_size = 5;
+    opcodes[3].key_size = 4;
+    opcodes[4].key_size = 4;
+    opcodes[5].key_size = 3;
+    opcodes[6].key_size = 5;
+    opcodes[7].key_size = 6;
+    opcodes[8].key_size = 3;
+    opcodes[9].key_size = 5;
+    opcodes[10].key_size = 6;
+    opcodes[11].key_size = 5;
+    opcodes[12].key_size = 7;
+    opcodes[13].key_size = 4;
+    opcodes[14].key_size = 8;
+    opcodes[15].key_size = 7;
+    opcodes[16].key_size = 3;
+    opcodes[17].key_size = 9;
+    opcodes[18].key_size = 3;
+    opcodes[19].key_size = 5;
+    opcodes[20].key_size = 6;
+    opcodes[21].key_size = 7;
+    opcodes[22].key_size = 6;
+    opcodes[23].key_size = 7;
+
+    
 }
 
 void display_opcodes(struct opcode opcodes[])
@@ -90,7 +117,7 @@ void display_opcodes(struct opcode opcodes[])
 void print_binary(int value)
 {
     int i=0;
-    for( i=0; i<8; i++)
+    for( i=7; i>=0; i--)
     {
         printf("%d",(value & (1 << i)) >> i);
     }
@@ -98,12 +125,32 @@ void print_binary(int value)
 
 struct opcode get_opcode(char* code, struct opcode* opcodes)
 {
+    int total_length = 0;
+    int temp_length = 0;
+    struct opcode out_opcode;
+    out_opcode.value = -1;
+    out_opcode.key = "null";
+
     for(int i=0; i<NUM_OPCODES; i++)
     {
-        if(strcmp(opcodes[i].key,code) == 0)
+        if(sizeof(code) < opcodes[i].key_size)
+            continue;
+
+        temp_length = 0;
+        for(int j=0; j<opcodes[i].key_size; j++)
         {
-            return opcodes[i];
+            if(opcodes[i].key[j] == code[j])
+                temp_length++;
+            else
+                break;
+        }
+
+        if(temp_length > total_length && temp_length == opcodes[i].key_size)
+        {
+            total_length = temp_length;
+            out_opcode = opcodes[i];
         }
     }
-    return opcodes[0];
+    
+    return out_opcode;
 }

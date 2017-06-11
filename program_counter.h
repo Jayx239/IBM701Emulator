@@ -12,6 +12,7 @@
 struct program_counter {
     
     int current_address;
+    int address_mode;   // full word half word, determines if offset is used
     int offset; // 0 or 1
     int address_word[WORD_SIZE];
     int instruction[INSTRUCTION_SIZE];
@@ -34,5 +35,6 @@ int accumulator_empty(struct program_counter *pc);
 long get_accumulator_value(struct program_counter *pc);
 void set_accumulator_value(struct program_counter *pc, long value);
 void print_pc(struct program_counter pc);
+void toggle_address_mode(struct program_counter *pc);
 
 #endif

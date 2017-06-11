@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <setjmp.h>
 
 #define INSTRUCTION_SIZE 18
 #define OPCODE_SIZE 6
@@ -19,7 +20,7 @@ int Machine_Memory[MEMORY_SIZE][WORD_SIZE];
 int accumulator[38];
 int multiplier_qotient[36];
 struct program_counter pc;
-
+static jmp_buf file_in_jmp;
 
 void* init_memory();
 void* command_reader(char* args[]);
@@ -49,40 +50,68 @@ void* command_reader(char* args[])
     generate_opcodes(opcodes);
     char buff[50];
     int fd;
-
+    struct opcode next_opcode;
     while(run == 1)
     {
+        if(setjmp(file_in_jmp) == 1)
+            printf("Invalid file name\n");
+
         printf("Enter a command: ");
         fflush(stdout);
         read(0,buff, 50);
 
         if(memcmp(buff,"quit",4) == 0)
             run = 0;
-        if(memcmp(buff,"file",4) == 0)
+        else if(memcmp(buff,"file",4) == 0)
         {
-            fd = open(args[1],O_RDONLY);
-            char buff[INSTRUCTION_SIZE];
+            char file_buff[50];
             int read_len = 0;
-            while((read_len = read(fd,buff , INSTRUCTION_SIZE)) > 0)
-            {
-                import_file(buff);
-            }
+            read_len = read(0,file_buff , 50);
+            file_buff[read_len-1] = '\0';
+            import_file(file_buff);
         }
-        if(memcmp(buff,"pm",2) == 0)
+        else if(memcmp(buff,"pm",2) == 0)
             print_memory();
-        if(memcmp(buff,"ppc",3) == 0)
+        else if(memcmp(buff,"ppc",3) == 0)
             print_pc(pc);
-        if(memcmp(buff,"sv",2) == 0)
+        else if(memcmp(buff,"sv",2) == 0)
         { 
             save_instruction();
         }
-        if(memcmp(buff,"ex",2) == 0)
+        else if(memcmp(buff,"ex",2) == 0)
         {
-            execute_instruction();
+            if(execute_instruction() == 1)
+                increment_counter(&pc);
+            set_address(&pc,pc.current_address,Machine_Memory);
+        }
+        else if(memcmp(buff,"help",4) == 0)
+        {
+            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\n\n");
+        }
+        else if(memcmp(buff,"op",2) == 0)
+        {
+            display_opcodes(opcodes);
+        }
+        else
+        {
+            next_opcode = get_opcode(buff,opcodes);
+            if(next_opcode.value != -1)
+            {
+                save_instruction();
+            }
         }
 
 
+
     }
+}
+
+void save_opcode_instruction(struct opcode inst_opcode, char* buff)
+{
+    printf("save_opcode_instruction");
+    char* output = &buff[inst_opcode.key_size];
+    int address = atoi(output);
+
 }
 
 void save_instruction()
@@ -99,7 +128,7 @@ void save_instruction()
     free(byte_value);
     char* memory_value = (char*) malloc(WORD_SIZE);
     byte_value_to_string(Machine_Memory[pc.current_address], memory_value, WORD_SIZE);
-        fprintf(stdout, "%d: %s\n",pc.current_address, memory_value);
+    fprintf(stdout, "%d: %s\n",pc.current_address, memory_value);
     free(memory_value);
 
 }
@@ -108,28 +137,30 @@ void save_instruction()
 void import_file(char* file_name)
 {
     int fd;
-    char buff[50];
+    char buff[WORD_SIZE+1];
     fd = open(file_name,O_RDONLY);
-    while(read(fd,buff,36))
+    
+    if(fd < 0)
+        longjmp(file_in_jmp,1);
+ 
+    while(read(fd,&buff,WORD_SIZE+1) > 0)
     {
         import_instruction(buff);
     }
-
 
 }
 
 void import_instruction(char* instruction)
 {
-    int instruction_decoded[36];
+    int instruction_decoded[WORD_SIZE];
     for(int i=0; i<INSTRUCTION_SIZE; i++)
         if(instruction[i] == '1')
             instruction_decoded[i] = 1;
         else
             instruction_decoded[i] = 0;
 
-    memcpy(&Machine_Memory[pc.current_address],instruction_decoded,INSTRUCTION_SIZE);;
+    memcpy(&Machine_Memory[pc.current_address],instruction_decoded,WORD_SIZE);;
 
-    increment_counter(&pc);
     increment_counter(&pc);
 
 }
@@ -207,19 +238,19 @@ int execute_instruction()
             memcpy(&Machine_Memory[get_address(&pc)],pc.accumulator, ACCUMULATOR_SIZE);
             break;
         case 0b001101:
-
+            memcpy(&Machine_Memory[get_address(&pc)],&pc.accumulator[OPCODE_SIZE],ADDRESS_SIZE);
             break;
         case 0b101101:
-
+            and_bit_array(Machine_Memory[get_address(&pc)],pc.accumulator,&pc.accumulator[0], WORD_SIZE);
             break;
         case 0b01110:
-
+            memcpy(&Machine_Memory[get_address(&pc)], pc.multiplier_quotient, ACCUMULATOR_SIZE);
             break;
         case 0b01111:
-
+            memcpy(&pc.multiplier_quotient, &Machine_Memory[get_address(&pc)], ACCUMULATOR_SIZE);
             break;
         case 0b10000:
-
+            
             break;
         case 0b10001:
 
@@ -246,7 +277,7 @@ int execute_instruction()
             break;
     }
 
-
+    return 1;
 
 }
 

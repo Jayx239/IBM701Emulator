@@ -7,16 +7,17 @@
 
 void increment_counter(struct program_counter *pc)
 {
-    if(pc->offset == 0)
+    if(pc->address_mode == 1 && pc->offset == 0)
     {
         pc->offset = 1; 
         return;
     }
 
-    if(pc->current_address < 2047)
+    if(pc->current_address < 4096)
     {
         pc->current_address+=1;
-        pc->offset = 0;
+        if(pc->address_mode == 1)
+            pc->offset = 0;
     }
     else
         fprintf(stderr,"Program counter reached end of memory");
@@ -24,7 +25,7 @@ void increment_counter(struct program_counter *pc)
 
 void decrement_counter(struct program_counter *pc)
 {
-    if(pc->offset == 1)
+    if(pc->address_mode == 1 && pc->offset == 1)
     {
         pc->offset = 0;
         return;
@@ -32,7 +33,8 @@ void decrement_counter(struct program_counter *pc)
 
     if(pc->current_address > 0)
     {
-        pc->offset == 1;
+        if(pc->address_mode == 1)
+            pc->offset == 1;
         pc->current_address--;
 
     }
@@ -43,7 +45,7 @@ void decrement_counter(struct program_counter *pc)
 void jump_counter(struct program_counter *pc, int address)
 {
     pc->offset = 0;
-    if(address > -1 && address < 2048)
+    if(address > -1 && address < 4096)
         pc->current_address = address;
     else
         fprintf(stderr,"Program counter jump address out of range");
@@ -55,6 +57,7 @@ void init_program_counter(struct program_counter * pc, int Machine_Memory[MEMORY
     clear_accumulator(pc);
     clear_multiplier_quotient(pc);
     compute_instruction(pc, Machine_Memory);
+    pc->address_mode = 0;
 }
 
 void clear_accumulator(struct program_counter * pc)
@@ -73,7 +76,7 @@ void clear_multiplier_quotient(struct program_counter * pc)
 
 void compute_instruction(struct program_counter *pc, int Machine_Memory[MEMORY_SIZE][WORD_SIZE])
 {
-    if(pc->offset == 1)
+    if(pc->offset == 0)
     {
         for(int i=INSTRUCTION_SIZE-1; i>=0; i--)
         {
@@ -94,11 +97,9 @@ int get_address(struct program_counter *pc)
 {
     int address = 0;
     int pow = 1;
-    int offset = pc->offset == 0 ? INSTRUCTION_SIZE : 0;
-
     for(int i=OPCODE_SIZE; i<INSTRUCTION_SIZE; i++)
     {
-        address += pc->instruction[i+offset]*pow;
+        address += pc->instruction[i]*pow;
         pow*=2;
     }
 
@@ -130,8 +131,9 @@ int strip_opcode(struct program_counter *pc)
 }
 
 int accumulator_overflow(struct program_counter *pc)
-{
-    if(pc->accumulator[0] == 1 || pc->accumulator[1] == 1)
+{   
+    // P and Q overflow bits
+    if(pc->accumulator[ACCUMULATOR_SIZE-3] == 1 || pc->accumulator[ACCUMULATOR_SIZE-2] == 1)
         return 1;
 
     return 0;
@@ -142,11 +144,11 @@ int accumulator_empty(struct program_counter *pc)
     int is_positive = 1;
     int is_zero = 1;
 
-    if(pc->accumulator[0] == 1)
+    if(pc->accumulator[ACCUMULATOR_SIZE-1] == 1)
         is_positive*=-1;
 
 
-    for(int i=2; i<ACCUMULATOR_SIZE; i++)
+    for(int i=0; i<ACCUMULATOR_SIZE-1; i++)
         if(pc->accumulator[i] == 1)
         {
             is_zero = 0;
@@ -161,19 +163,21 @@ int accumulator_empty(struct program_counter *pc)
 
 long get_accumulator_value(struct program_counter *pc)
 {
-    //int value[ACCUMULATOR_SIZE];
-    //value[0] = pc->accumulator[0];
-    //for(int i=0; i<ACCUMULATOR_SIZE; i++)
-        //value[i] = pc->accumulator[i];
+    int value[ACCUMULATOR_SIZE];
+    //value[ACCUMULATOR_SIZE] = pc->accumulator[ACCUMULATOR_SIZE-1];
+    for(int i=0; i<ACCUMULATOR_SIZE; i++)
+        value[i] = pc->accumulator[i];
 
-    return signed_byte_value(pc->accumulator, ACCUMULATOR_SIZE);
+    return signed_byte_value(value, ACCUMULATOR_SIZE-2);
 
 }
 
 void set_accumulator_value(struct program_counter *pc, long new_value)
 {
     int *temp_val = create_byte_value(new_value,ACCUMULATOR_SIZE);
-    memcpy(pc->accumulator,temp_val,ACCUMULATOR_SIZE*sizeof(int));
+    for(int i=0; i<ACCUMULATOR_SIZE; i++)
+        pc->accumulator[i] = temp_val[i];
+    //    memcpy(pc->accumulator,temp_val,ACCUMULATOR_SIZE*sizeof(int));
 
     free(temp_val);
 }
@@ -203,6 +207,10 @@ void print_pc(struct program_counter pc)
     free(instruction_string);
 }
 
+void toggle_address_mode(struct program_counter *pc)
+{
+    pc->address_mode = !pc->address_mode;
+}
 /*void refresh_pc(struct program_counter *pc, int Machine_Memory[MEMORY_SIZE][WORD_SIZE])
 {
    compute_instruction(pc, Machine_Memory);

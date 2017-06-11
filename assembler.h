@@ -6,6 +6,7 @@
 struct opcode {
     int value;
     char* key;
+    int key_size;
 };
 
 void generate_opcodes(struct opcode opcodes[]);
