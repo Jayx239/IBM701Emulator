@@ -102,7 +102,7 @@ void  generate_opcodes(struct opcode opcodes[])
 
 void create_instruction(struct program_counter *pc, int* Machine_Memory, struct opcode command_opcode,int address)
 {
-    int *instruction = &Machine_Memory[pc->current_address];
+    int *instruction = Machine_Memory;
 
     int pow = 1;
     for(int i=0; i<OPCODE_SIZE; i++)

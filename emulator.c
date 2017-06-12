@@ -30,6 +30,7 @@ void print_memory();
 void import_instruction(char* instruction);
 int execute_instruction();
 void save_opcode_instruction(struct opcode inst_opcode, char* buff);
+void save_file(char *file_buff);
 
 int main(int argc, char* argv[])
 {
@@ -65,6 +66,9 @@ void* command_reader(char* args[])
             run = 0;
         else if(memcmp(buff,"file",4) == 0)
         {
+            printf("Enter file name (precede with ./ if local path): ");
+            fflush(stdout);
+
             char file_buff[50];
             int read_len = 0;
             read_len = read(0,file_buff , 50);
@@ -87,11 +91,23 @@ void* command_reader(char* args[])
         }
         else if(memcmp(buff,"help",4) == 0)
         {
-            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\npm - print memory contents from -10 to +10 address's around the current address\nop - prints a list of the accepted opcodes. To enter an opcode just type the opcode and the value of the instruction\nfile - opens up a file, for relative directory type ./file_name\nquit - exit the emulator\n\n");
+            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\npm - print memory contents from -10 to +10 address's around the current address\nop - prints a list of the accepted opcodes. To enter an opcode just type the opcode and the value of the instruction\nfile - opens up a file, for relative directory type ./file_name\nquit - exit the emulator\nsave - save contents of the memory registers\n\n");
         }
         else if(memcmp(buff,"op",2) == 0)
         {
             display_opcodes(opcodes);
+        }
+        else if(memcmp(buff,"save",4) == 0)
+        {
+            printf("Enter file name: ");
+            fflush(stdout);
+            
+            char file_buff[50];
+            int read_len = 0;
+            read_len = read(0,file_buff , 50);
+            file_buff[read_len-1] = '\0';
+            save_file(file_buff);
+
         }
         else
         {
@@ -108,13 +124,26 @@ void* command_reader(char* args[])
     }
 }
 
+void save_file(char* file_buff)
+{
+    FILE *fp  = fopen(file_buff,"w");
+    for(int i=0; i<MEMORY_SIZE; i++)
+    {
+        for(int j=0; j<WORD_SIZE; j++)
+            fprintf(fp,"%d",Machine_Memory[i][j]);
+        if(i != MEMORY_SIZE-1)
+            fprintf(fp,"\n");
+    }
+
+    fclose(fp);
+}
+
 void save_opcode_instruction(struct opcode inst_opcode, char* buff)
 {
-    printf("save_opcode_instruction");
     char* output = &buff[inst_opcode.key_size+1];
     int address = atoi(output);
-    create_instruction(&pc,&Machine_Memory[0][0],inst_opcode,address);
-    jump_counter(&pc,address);
+    create_instruction(&pc,&Machine_Memory[pc.current_address][0],inst_opcode,address);
+    jump_counter(&pc,pc.current_address);
 
 }
 
@@ -143,14 +172,16 @@ void import_file(char* file_name)
     int fd;
     char buff[WORD_SIZE+1];
     fd = open(file_name,O_RDONLY);
-    
+
     if(fd < 0)
         longjmp(file_in_jmp,1);
- 
+
     while(read(fd,&buff,WORD_SIZE+1) > 0)
     {
         import_instruction(buff);
     }
+
+    close(fd);
 
 }
 
@@ -188,7 +219,6 @@ int execute_instruction()
 
         case 0b00001:
             set_address(&pc,get_address(&pc), Machine_Memory);
-            //break;
             return 0;
         case 0b00010:
             if(accumulator_overflow(&pc))
@@ -274,7 +304,7 @@ int execute_instruction()
             for(int i=0; i<ACCUMULATOR_SIZE; i++)
                 pc.accumulator[i] = temp_multiple_val[i+MULTIPLIER_QUOTIENT_SIZE];
             free(temp_multiple_val);
-            
+
             break;
         case 0b10010:
             dividend = signed_byte_value(Machine_Memory[get_address(&pc)],WORD_SIZE);
@@ -285,9 +315,9 @@ int execute_instruction()
             temp_multiple_val = create_byte_value(new_accum_val,MULTIPLIER_QUOTIENT_SIZE);
             for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
                 pc.multiplier_quotient[i] = temp_multiple_val[i];
-            
+
             free(temp_multiple_val);
-            
+
             temp_multiple_val = create_byte_value(remainder,ACCUMULATOR_SIZE);
             for(int i=0; i<ACCUMULATOR_SIZE; i++)
                 pc.accumulator[i] = temp_multiple_val[i];
@@ -310,7 +340,7 @@ int execute_instruction()
                 temp_multiple_val[ACCUMULATOR_SIZE + i] = pc.multiplier_quotient[i];
 
 
-            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),1);
+            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),0);
             for(int i=0; i<ACCUMULATOR_SIZE; i++)
                 pc.accumulator[i] = temp_multiple_val[i];
             for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
@@ -326,7 +356,7 @@ int execute_instruction()
                 temp_multiple_val[ACCUMULATOR_SIZE + i] = pc.multiplier_quotient[i];
 
 
-            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),0);
+            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),1);
             for(int i=0; i<ACCUMULATOR_SIZE; i++)
                 pc.accumulator[i] = temp_multiple_val[i];
             for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
@@ -336,10 +366,10 @@ int execute_instruction()
 
             break;
         case 0b10110:
-            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),1);
+            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),0);
             break;
         case 0b10111:
-            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),0);
+            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),1);
             break;
         default:
             break;
@@ -366,3 +396,4 @@ void print_memory()
     }
 
 }
+
