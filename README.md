@@ -27,6 +27,8 @@ file - opens up a file, for relative directory type ./file_name
 
 quit - exits the emulator
 
+save - save contents of the memory registers
+
 ### Architecture:
 #### Memory:
 	
