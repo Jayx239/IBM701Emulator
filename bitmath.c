@@ -4,7 +4,7 @@
 #include "program_counter.h"
 #include "bitmath.h"
 
-long signed_byte_value(int bit_array[], int size)
+long long signed_byte_value(int bit_array[], int size)
 {
     int is_signed = bit_array[size-1];
     
@@ -36,7 +36,7 @@ long signed_byte_value(int bit_array[], int size)
     }*/
      
     int pow = 1;
-    long output = 0;
+    long long output = 0;
 
     for(int i=0; i<size-1; i++)
     {
@@ -158,5 +158,24 @@ void and_bit_array(int value_a[], int value_b[], int *output, int size)
             output[i] = 1;
         else
             output[i] = 0;
+
+}
+
+void shift_bit_array(int* array, int size, int shift_amount, int shift_left)
+{
+    if(shift_left)
+        for(int i=size-1; i>=0; i--)
+        {
+            if(i-shift_amount >=0)
+                array[i] = array[i-shift_amount];
+            else
+                array[i] = 0;
+        }
+    else
+        for(int i=0; i < size; i++)
+            if((i + shift_amount) < size)
+                array[i] = array[i+shift_amount];
+            else
+                array[i] = 0;
 
 }

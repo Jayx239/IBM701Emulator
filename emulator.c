@@ -174,8 +174,8 @@ void import_instruction(char* instruction)
 int execute_instruction()
 {
     int opcode = strip_opcode(&pc);
-    long value_address, accum_val, new_accum_val;
-
+    long long value_address, accum_val, new_accum_val,mq_value,multiplicand,dividend,remainder;
+    int* temp_multiple_val;
     switch(opcode)
     {
         case 0b00000:
@@ -250,28 +250,92 @@ int execute_instruction()
             memcpy(&pc.multiplier_quotient, &Machine_Memory[get_address(&pc)], ACCUMULATOR_SIZE);
             break;
         case 0b10000:
-            
+            mq_value = signed_byte_value(pc.multiplier_quotient,MULTIPLIER_QUOTIENT_SIZE);
+            multiplicand = signed_byte_value(Machine_Memory[get_address(&pc)],ADDRESS_SIZE);
+            new_accum_val = mq_value*multiplicand;
+            temp_multiple_val = create_byte_value(new_accum_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE);
+            for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+                pc.multiplier_quotient[i] = temp_multiple_val[i];
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                pc.accumulator[i] = temp_multiple_val[i+MULTIPLIER_QUOTIENT_SIZE];
+            free(temp_multiple_val);
             break;
         case 0b10001:
-
+            mq_value = signed_byte_value(pc.multiplier_quotient,MULTIPLIER_QUOTIENT_SIZE);
+            multiplicand = signed_byte_value(Machine_Memory[get_address(&pc)],WORD_SIZE);
+            new_accum_val = mq_value*multiplicand;
+            temp_multiple_val = create_byte_value(new_accum_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE);
+            for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+                pc.multiplier_quotient[i] = 0;
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                pc.accumulator[i] = temp_multiple_val[i+MULTIPLIER_QUOTIENT_SIZE];
+            free(temp_multiple_val);
+            
             break;
         case 0b10010:
-
+            dividend = signed_byte_value(Machine_Memory[get_address(&pc)],WORD_SIZE);
+            accum_val = signed_byte_value(pc.accumulator,ACCUMULATOR_SIZE)<<38;
+            accum_val += signed_byte_value(pc.multiplier_quotient,MULTIPLIER_QUOTIENT_SIZE);
+            new_accum_val/=dividend;
+            remainder = accum_val%dividend;
+            temp_multiple_val = create_byte_value(new_accum_val,MULTIPLIER_QUOTIENT_SIZE);
+            for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+                pc.multiplier_quotient[i] = temp_multiple_val[i];
+            
+            free(temp_multiple_val);
+            
+            temp_multiple_val = create_byte_value(remainder,ACCUMULATOR_SIZE);
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                pc.accumulator[i] = temp_multiple_val[i];
+            free(temp_multiple_val);
             break;
         case 0b10011:
-
+            if(pc.multiplier_quotient[MULTIPLIER_QUOTIENT_SIZE-1] == 1)
+                accum_val = signed_byte_value(pc.accumulator,ACCUMULATOR_SIZE);
+            new_accum_val = accum_val+1;
+            temp_multiple_val = create_byte_value(new_accum_val,ACCUMULATOR_SIZE);
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                pc.accumulator[i] = temp_multiple_val[i];
+            free(temp_multiple_val);
             break;
         case 0b10100:
+            temp_multiple_val = (int*) malloc((ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE)*sizeof(int));
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                temp_multiple_val[i] = pc.accumulator[i];
+            for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+                temp_multiple_val[ACCUMULATOR_SIZE + i] = pc.multiplier_quotient[i];
 
+
+            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),1);
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                pc.accumulator[i] = temp_multiple_val[i];
+            for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+                pc.multiplier_quotient[i] = temp_multiple_val[ACCUMULATOR_SIZE + i];
+
+            free(temp_multiple_val);
             break;
         case 0b10101:
+            temp_multiple_val = (int*) malloc((ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE)*sizeof(int));
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                temp_multiple_val[i] = pc.accumulator[i];
+            for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+                temp_multiple_val[ACCUMULATOR_SIZE + i] = pc.multiplier_quotient[i];
+
+
+            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),0);
+            for(int i=0; i<ACCUMULATOR_SIZE; i++)
+                pc.accumulator[i] = temp_multiple_val[i];
+            for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+                pc.multiplier_quotient[i] = temp_multiple_val[ACCUMULATOR_SIZE + i];
+
+            free(temp_multiple_val);
 
             break;
         case 0b10110:
-
+            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),1);
             break;
         case 0b10111:
-
+            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),0);
             break;
         default:
             break;
