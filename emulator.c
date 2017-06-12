@@ -110,11 +110,10 @@ void* command_reader(char* args[])
 
 void save_opcode_instruction(struct opcode inst_opcode, char* buff)
 {
-    printf("save_opcode_instruction");
     char* output = &buff[inst_opcode.key_size+1];
     int address = atoi(output);
-    create_instruction(&pc,&Machine_Memory[0][0],inst_opcode,address);
-    jump_counter(&pc,address);
+    create_instruction(&pc,&Machine_Memory[pc.current_address][0],inst_opcode,address);
+    jump_counter(&pc,pc.current_address);
 
 }
 
@@ -310,7 +309,7 @@ int execute_instruction()
                 temp_multiple_val[ACCUMULATOR_SIZE + i] = pc.multiplier_quotient[i];
 
 
-            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),1);
+            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),0);
             for(int i=0; i<ACCUMULATOR_SIZE; i++)
                 pc.accumulator[i] = temp_multiple_val[i];
             for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
@@ -326,7 +325,7 @@ int execute_instruction()
                 temp_multiple_val[ACCUMULATOR_SIZE + i] = pc.multiplier_quotient[i];
 
 
-            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),0);
+            shift_bit_array(temp_multiple_val,ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE,get_address(&pc),1);
             for(int i=0; i<ACCUMULATOR_SIZE; i++)
                 pc.accumulator[i] = temp_multiple_val[i];
             for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
@@ -336,10 +335,10 @@ int execute_instruction()
 
             break;
         case 0b10110:
-            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),1);
+            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),0);
             break;
         case 0b10111:
-            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),0);
+            shift_bit_array(&pc.accumulator[0],ACCUMULATOR_SIZE,get_address(&pc),1);
             break;
         default:
             break;
