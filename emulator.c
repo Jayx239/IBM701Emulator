@@ -29,6 +29,7 @@ void import_file(char* buff);
 void print_memory();
 void import_instruction(char* instruction);
 int execute_instruction();
+void save_opcode_instruction(struct opcode inst_opcode, char* buff);
 
 int main(int argc, char* argv[])
 {
@@ -86,7 +87,7 @@ void* command_reader(char* args[])
         }
         else if(memcmp(buff,"help",4) == 0)
         {
-            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\n\n");
+            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\npm - print memory contents from -10 to +10 address's around the current address\nop - prints a list of the accepted opcodes. To enter an opcode just type the opcode and the value of the instruction\nfile - opens up a file, for relative directory type ./file_name\nquit - exit the emulator\n\n");
         }
         else if(memcmp(buff,"op",2) == 0)
         {
@@ -97,7 +98,8 @@ void* command_reader(char* args[])
             next_opcode = get_opcode(buff,opcodes);
             if(next_opcode.value != -1)
             {
-                save_instruction();
+                save_opcode_instruction(next_opcode,buff);
+                set_address(&pc,pc.current_address,Machine_Memory);
             }
         }
 
@@ -109,8 +111,10 @@ void* command_reader(char* args[])
 void save_opcode_instruction(struct opcode inst_opcode, char* buff)
 {
     printf("save_opcode_instruction");
-    char* output = &buff[inst_opcode.key_size];
+    char* output = &buff[inst_opcode.key_size+1];
     int address = atoi(output);
+    create_instruction(&pc,&Machine_Memory[0][0],inst_opcode,address);
+    jump_counter(&pc,address);
 
 }
 
@@ -347,8 +351,14 @@ int execute_instruction()
 
 void print_memory()
 {
-    for(int i=0; i<MEMORY_SIZE; i++)
+    int current_address = pc.current_address;
+    int start_address = current_address - 10 >= 0 ? current_address : 0;
+    int stop_address = current_address + 10 < MEMORY_SIZE ? current_address : MEMORY_SIZE;
+
+    for(int i=start_address; i<stop_address+10; i++)
     {
+        if(i == current_address)
+            fprintf(stdout,"current address -->");
         for(int j=0; j<INSTRUCTION_SIZE; j++)
             fprintf(stdout,"%d",Machine_Memory[i][j]);
 

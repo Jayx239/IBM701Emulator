@@ -100,6 +100,26 @@ void  generate_opcodes(struct opcode opcodes[])
     
 }
 
+void create_instruction(struct program_counter *pc, int* Machine_Memory, struct opcode command_opcode,int address)
+{
+    int *instruction = &Machine_Memory[pc->current_address];
+
+    int pow = 1;
+    for(int i=0; i<OPCODE_SIZE; i++)
+    {
+        instruction[i] = (command_opcode.value & pow ) >> i;
+        pow*=2;
+    }
+    
+    int* address_array = create_byte_value(address,INSTRUCTION_SIZE-OPCODE_SIZE);
+    
+    for(int i=OPCODE_SIZE; i<INSTRUCTION_SIZE; i++)
+        instruction[i] = address_array[i-OPCODE_SIZE];
+    
+    for(int i=INSTRUCTION_SIZE; i<WORD_SIZE; i++)
+        instruction[i] = 0;
+}
+
 void display_opcodes(struct opcode opcodes[])
 {
     int i=0;
