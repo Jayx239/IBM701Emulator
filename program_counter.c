@@ -34,7 +34,7 @@ void decrement_counter(struct program_counter *pc)
     if(pc->current_address > 0)
     {
         if(pc->address_mode == 1)
-            pc->offset == 1;
+            pc->offset = 1;
         pc->current_address--;
 
     }

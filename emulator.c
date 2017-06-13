@@ -22,8 +22,8 @@ int multiplier_qotient[36];
 struct program_counter pc;
 static jmp_buf file_in_jmp;
 
-void* init_memory();
-void* command_reader(char* args[]);
+void init_memory();
+void command_reader(char* args[]);
 void save_instruction();
 void import_file(char* buff);
 void print_memory();
@@ -40,14 +40,14 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void* init_memory()
+void init_memory()
 {
     for(int i=0; i<MEMORY_SIZE; i++)
         for(int j=0; j<WORD_SIZE; j++)
             Machine_Memory[i][j] = 0;
 }
 
-void* command_reader(char* args[])
+void command_reader(char* args[])
 {
     generate_opcodes(opcodes);
     char buff[50];
