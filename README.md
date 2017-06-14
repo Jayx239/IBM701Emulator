@@ -29,6 +29,11 @@ quit - exits the emulator
 
 save - save contents of the memory registers
 
+jump # - this command followed by a number will jump the program counter to that memory address
+
+run - executes 10 instructions displaying the register contents each execution
+
+
 ### Architecture:
 #### Memory:
 	

@@ -21,6 +21,7 @@ int accumulator[38];
 int multiplier_qotient[36];
 struct program_counter pc;
 static jmp_buf file_in_jmp;
+int PPC_Ex_Mode = 1;
 
 void init_memory();
 void command_reader(char* args[]);
@@ -88,10 +89,13 @@ void command_reader(char* args[])
             if(execute_instruction() == 1)
                 increment_counter(&pc);
             set_address(&pc,pc.current_address,Machine_Memory);
+            
+            if(PPC_Ex_Mode == 1)
+                print_pc(pc);
         }
         else if(memcmp(buff,"help",4) == 0)
         {
-            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\npm - print memory contents from -10 to +10 address's around the current address\nop - prints a list of the accepted opcodes. To enter an opcode just type the opcode and the value of the instruction\nfile - opens up a file, for relative directory type ./file_name\nquit - exit the emulator\nsave - save contents of the memory registers\n\n");
+            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\npm - print memory contents from -10 to +10 address's around the current address\nop - prints a list of the accepted opcodes. To enter an opcode just type the opcode and the value of the instruction\nfile - opens up a file, for relative directory type ./file_name\nquit - exit the emulator\nsave - save contents of the memory registers\njump # - this command followed by a number will jump the program counter to that memory address\nrun - executes 10 instructions displaying the register contents each execution\nsm - set ex mode, 1 prints ppc each time an execution is done, 0 does not\n\n");
         }
         else if(memcmp(buff,"op",2) == 0)
         {
@@ -108,6 +112,27 @@ void command_reader(char* args[])
             file_buff[read_len-1] = '\0';
             save_file(file_buff);
 
+        }
+        else if(memcmp(buff,"run",3) == 0)
+        {
+            for(int i=0; i<10; i++)
+            {
+                if(execute_instruction() == 1)
+                    increment_counter(&pc);
+                set_address(&pc,pc.current_address,Machine_Memory);
+                print_pc(pc);
+                sleep(1);
+            }
+        }
+        else if(memcmp(buff,"jump",4) == 0)
+        {
+            int next_address = atoi(&buff[5]);
+            set_address(&pc, next_address, Machine_Memory);
+        }
+        else if(memcmp(buff,"sm",2) == 0)
+        {
+            int mode_value = atoi(&buff[3]);
+            PPC_Ex_Mode = mode_value;
         }
         else
         {
