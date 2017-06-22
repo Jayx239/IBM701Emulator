@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,6 +10,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <setjmp.h>
+#include <ctype.h>
 
 #define INSTRUCTION_SIZE 18
 #define OPCODE_SIZE 6
@@ -21,6 +23,8 @@ int accumulator[38];
 int multiplier_qotient[36];
 struct program_counter pc;
 static jmp_buf file_in_jmp;
+int PPC_Ex_Mode = 1;
+int run_prog = 1;
 
 void init_memory();
 void command_reader(char* args[]);
@@ -32,8 +36,13 @@ int execute_instruction();
 void save_opcode_instruction(struct opcode inst_opcode, char* buff);
 void save_file(char *file_buff);
 
+static void sigstp_handler(int sig);
+
 int main(int argc, char* argv[])
 {
+    if(signal(SIGTSTP, sigstp_handler) == SIG_ERR)
+        printf("Error setting up signal handler!\n");
+
     init_memory();
     init_program_counter(&pc, Machine_Memory);
     command_reader(argv); 
@@ -51,6 +60,7 @@ void command_reader(char* args[])
 {
     generate_opcodes(opcodes);
     char buff[50];
+    int read_size = 0;
     int fd;
     struct opcode next_opcode;
     while(run == 1)
@@ -60,7 +70,7 @@ void command_reader(char* args[])
 
         printf("Enter a command: ");
         fflush(stdout);
-        read(0,buff, 50);
+        read_size = read(0,buff, 50);
 
         if(memcmp(buff,"quit",4) == 0)
             run = 0;
@@ -88,10 +98,13 @@ void command_reader(char* args[])
             if(execute_instruction() == 1)
                 increment_counter(&pc);
             set_address(&pc,pc.current_address,Machine_Memory);
+            
+            if(PPC_Ex_Mode == 1)
+                print_pc(pc);
         }
         else if(memcmp(buff,"help",4) == 0)
         {
-            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\npm - print memory contents from -10 to +10 address's around the current address\nop - prints a list of the accepted opcodes. To enter an opcode just type the opcode and the value of the instruction\nfile - opens up a file, for relative directory type ./file_name\nquit - exit the emulator\nsave - save contents of the memory registers\n\n");
+            printf("Help menu ------------\nppc - print program pointer details\nsv - save next binary input into current memory location\nex - executes instruction in current register\nhelp - show this menu\npm - print memory contents from -10 to +10 address's around the current address\nop - prints a list of the accepted opcodes. To enter an opcode just type the opcode and the value of the instruction\nfile - opens up a file, for relative directory type ./file_name\nquit - exit the emulator\nsave - save contents of the memory registers\njump # - this command followed by a number will jump the program counter to that memory address\nrun - executes instructions continuously displaying the register contents each execution. Type ctrl-z to stop execution.\nsm - set ex mode, 1 prints ppc each time an execution is done, 0 does not\n\n");
         }
         else if(memcmp(buff,"op",2) == 0)
         {
@@ -109,9 +122,33 @@ void command_reader(char* args[])
             save_file(file_buff);
 
         }
+        else if(memcmp(buff,"run",3) == 0)
+        {
+            run_prog = 1;
+            
+            while(run_prog)
+            {
+                if(execute_instruction() == 1)
+                    increment_counter(&pc);
+                set_address(&pc,pc.current_address,Machine_Memory);
+                print_pc(pc);
+                sleep(1);
+            }
+            
+        }
+        else if(memcmp(buff,"jump",4) == 0)
+        {
+            int next_address = atoi(&buff[5]);
+            set_address(&pc, next_address, Machine_Memory);
+        }
+        else if(memcmp(buff,"sm",2) == 0)
+        {
+            int mode_value = atoi(&buff[3]);
+            PPC_Ex_Mode = mode_value;
+        }
         else
         {
-            next_opcode = get_opcode(buff,opcodes);
+            next_opcode = get_opcode(buff,opcodes,read_size);
             if(next_opcode.value != -1)
             {
                 save_opcode_instruction(next_opcode,buff);
@@ -382,18 +419,26 @@ int execute_instruction()
 void print_memory()
 {
     int current_address = pc.current_address;
-    int start_address = current_address - 10 >= 0 ? current_address : 0;
-    int stop_address = current_address + 10 < MEMORY_SIZE ? current_address : MEMORY_SIZE;
+    int start_address = current_address - 10 > 0 ? current_address-10 : 0;
+    int stop_address = current_address + 10 < MEMORY_SIZE ? current_address + 10 : MEMORY_SIZE;
 
-    for(int i=start_address; i<stop_address+10; i++)
+    for(int i=start_address; i<stop_address; i++)
     {
         if(i == current_address)
-            fprintf(stdout,"current address -->");
+            fprintf(stdout,"pc-->");
         for(int j=0; j<INSTRUCTION_SIZE; j++)
             fprintf(stdout,"%d",Machine_Memory[i][j]);
-
+        fprintf(stdout," ");
+        for(int j=INSTRUCTION_SIZE; j<WORD_SIZE; j++)
+            fprintf(stdout,"%d",Machine_Memory[i][j]);
         fprintf(stdout,"\n");
     }
 
 }
 
+void sigstp_handler(int sig)
+{
+    run_prog = 0;
+    if(signal(SIGTSTP, sigstp_handler) == SIG_ERR)
+        printf("Error setting up signal handler!\n");
+}

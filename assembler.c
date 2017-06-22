@@ -5,21 +5,6 @@
 #include <string.h>
 #include "assembler.h"
 
-/*int main(int argc, char* argv[])
-{   
-    int in_fd = 0;
-    if(argc > 1)
-        in_fd = (int) fopen(argv[1],"r");
-    //else
-        //return 0;
-
-    struct opcode opcodes[24];
-    
-    generate_opcodes(opcodes);
-    display_opcodes(opcodes);
-    return 0;
-}*/
-
 void  generate_opcodes(struct opcode opcodes[])
 {
     opcodes[0].value = 0b00000;
@@ -143,7 +128,7 @@ void print_binary(int value)
     }
 }
 
-struct opcode get_opcode(char* code, struct opcode* opcodes)
+struct opcode get_opcode(char* code, struct opcode* opcodes, int in_size)
 {
     int total_length = 0;
     int temp_length = 0;
@@ -153,7 +138,7 @@ struct opcode get_opcode(char* code, struct opcode* opcodes)
 
     for(int i=0; i<NUM_OPCODES; i++)
     {
-        if(sizeof(code) < opcodes[i].key_size)
+        if(in_size < opcodes[i].key_size)
             continue;
 
         temp_length = 0;
@@ -165,7 +150,7 @@ struct opcode get_opcode(char* code, struct opcode* opcodes)
                 break;
         }
 
-        if(temp_length > total_length && temp_length == opcodes[i].key_size)
+        if(temp_length > total_length && temp_length == opcodes[i].key_size && in_size > temp_length+1)
         {
             total_length = temp_length;
             out_opcode = opcodes[i];

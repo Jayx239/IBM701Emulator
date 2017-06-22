@@ -7,35 +7,7 @@
 long long signed_byte_value(int bit_array[], int size)
 {
     int is_signed = bit_array[size-1];
-    
-    /*if(is_signed)
-    {
-        for(int i=0; i<size; i++)
-        {
-            bit_array[i] = (bit_array[i] == 0) ? 1 : 0;
-        }
-
-        int carry = 1;
-        for(int i=0; i<size; i++)
-        {
-            if(bit_array[i] == 0)
-            {
-                bit_array[i] = 1;
-                carry = 0;
-                break;
-            }
-            else if(carry == 1)
-            {
-                bit_array[i] = 0;
-                carry++;
-            }
-        }
-
-        if(carry)
-            fprintf(stderr,"Overflow, handler not implemented");
-    }*/
-     
-    int pow = 1;
+    long long pow = 1;
     long long output = 0;
 
     for(int i=0; i<size-1; i++)
@@ -143,14 +115,6 @@ int add_bit_array(int value_a[], int value_b[],int* output, int size)
     return 0;
 }
 
-
-// A - B
-int subtract_bit_array(int value_a[], int value_b[], int* output, int size)
-{
-   return 0;
-
-}
-
 void and_bit_array(int value_a[], int value_b[], int *output, int size)
 {
     for(int i=0; i<size; i++)
@@ -177,5 +141,25 @@ void shift_bit_array(int* array, int size, int shift_amount, int shift_left)
                 array[i] = array[i+shift_amount];
             else
                 array[i] = 0;
+
+}
+
+int* combine_multiplier_accumulator(struct program_counter *pc)
+{
+    int *temp_multiple_val = (int*) malloc((ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE)*sizeof(int));
+    for(int i=0; i<ACCUMULATOR_SIZE; i++)
+        temp_multiple_val[i] = pc->accumulator[i];
+    for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+        temp_multiple_val[ACCUMULATOR_SIZE + i] = pc->multiplier_quotient[i];
+
+    return temp_multiple_val;
+}
+
+long long compute_multiplier_accumulator(struct program_counter *pc)
+{
+    int *combined = combine_multiplier_accumulator(pc);
+    long long output =  signed_byte_value(combined,ACCUMULATOR_SIZE + MULTIPLIER_QUOTIENT_SIZE);
+    free(combined);
+    return output;
 
 }
