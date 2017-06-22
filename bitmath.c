@@ -7,34 +7,6 @@
 long long signed_byte_value(int bit_array[], int size)
 {
     int is_signed = bit_array[size-1];
-    
-    /*if(is_signed)
-    {
-        for(int i=0; i<size; i++)
-        {
-            bit_array[i] = (bit_array[i] == 0) ? 1 : 0;
-        }
-
-        int carry = 1;
-        for(int i=0; i<size; i++)
-        {
-            if(bit_array[i] == 0)
-            {
-                bit_array[i] = 1;
-                carry = 0;
-                break;
-            }
-            else if(carry == 1)
-            {
-                bit_array[i] = 0;
-                carry++;
-            }
-        }
-
-        if(carry)
-            fprintf(stderr,"Overflow, handler not implemented");
-    }*/
-     
     long long pow = 1;
     long long output = 0;
 
@@ -141,14 +113,6 @@ int add_bit_array(int value_a[], int value_b[],int* output, int size)
     }
 
     return 0;
-}
-
-
-// A - B
-int subtract_bit_array(int value_a[], int value_b[], int* output, int size)
-{
-   return 0;
-
 }
 
 void and_bit_array(int value_a[], int value_b[], int *output, int size)

@@ -7,7 +7,6 @@ void byte_value_to_string(int value[],char* output, int size);
 void byte_value_from_string(char* input, int* output, int length);
 void add_accumulator(struct program_counter *pc, long add_val);
 int add_bit_array(int value_a[], int value_b[],int* output, int size);
-int subtract_bit_array(int value_a[], int value_b[], int* output, int size);
 void and_bit_array(int value_a[], int value_b[], int* output, int size);
 void shift_bit_array(int* array, int size, int shift_amount, int shift_left);
 int* combine_multiplier_accumulator(struct program_counter *pc);
