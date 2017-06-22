@@ -35,7 +35,7 @@ long long signed_byte_value(int bit_array[], int size)
             fprintf(stderr,"Overflow, handler not implemented");
     }*/
      
-    int pow = 1;
+    long long pow = 1;
     long long output = 0;
 
     for(int i=0; i<size-1; i++)
@@ -177,5 +177,25 @@ void shift_bit_array(int* array, int size, int shift_amount, int shift_left)
                 array[i] = array[i+shift_amount];
             else
                 array[i] = 0;
+
+}
+
+int* combine_multiplier_accumulator(struct program_counter *pc)
+{
+    int *temp_multiple_val = (int*) malloc((ACCUMULATOR_SIZE+MULTIPLIER_QUOTIENT_SIZE)*sizeof(int));
+    for(int i=0; i<ACCUMULATOR_SIZE; i++)
+        temp_multiple_val[i] = pc->accumulator[i];
+    for(int i=0; i<MULTIPLIER_QUOTIENT_SIZE; i++)
+        temp_multiple_val[ACCUMULATOR_SIZE + i] = pc->multiplier_quotient[i];
+
+    return temp_multiple_val;
+}
+
+long long compute_multiplier_accumulator(struct program_counter *pc)
+{
+    int *combined = combine_multiplier_accumulator(pc);
+    long long output =  signed_byte_value(combined,ACCUMULATOR_SIZE + MULTIPLIER_QUOTIENT_SIZE);
+    free(combined);
+    return output;
 
 }

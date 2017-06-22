@@ -10,5 +10,7 @@ int add_bit_array(int value_a[], int value_b[],int* output, int size);
 int subtract_bit_array(int value_a[], int value_b[], int* output, int size);
 void and_bit_array(int value_a[], int value_b[], int* output, int size);
 void shift_bit_array(int* array, int size, int shift_amount, int shift_left);
+int* combine_multiplier_accumulator(struct program_counter *pc);
+long long compute_multiplier_accumulator(struct program_counter *pc);
 
 #endif

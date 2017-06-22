@@ -143,7 +143,7 @@ void print_binary(int value)
     }
 }
 
-struct opcode get_opcode(char* code, struct opcode* opcodes)
+struct opcode get_opcode(char* code, struct opcode* opcodes, int in_size)
 {
     int total_length = 0;
     int temp_length = 0;
@@ -153,7 +153,7 @@ struct opcode get_opcode(char* code, struct opcode* opcodes)
 
     for(int i=0; i<NUM_OPCODES; i++)
     {
-        if(sizeof(code) < opcodes[i].key_size)
+        if(in_size < opcodes[i].key_size)
             continue;
 
         temp_length = 0;
@@ -165,7 +165,7 @@ struct opcode get_opcode(char* code, struct opcode* opcodes)
                 break;
         }
 
-        if(temp_length > total_length && temp_length == opcodes[i].key_size)
+        if(temp_length > total_length && temp_length == opcodes[i].key_size && in_size > temp_length+1)
         {
             total_length = temp_length;
             out_opcode = opcodes[i];

@@ -201,7 +201,12 @@ void print_pc(struct program_counter pc)
     
     char* accumulator_string = (char*) malloc(ACCUMULATOR_SIZE);
     byte_value_to_string(pc.accumulator, accumulator_string, ACCUMULATOR_SIZE);
-    printf("Accumulator: %s\n\n", accumulator_string);    
+    printf("Accumulator: %s\n", accumulator_string);    
+    
+    printf("Accumulator Int: %lld\n",signed_byte_value(pc.accumulator,ACCUMULATOR_SIZE));
+    printf("Multiplier Qotient: %lld\n",signed_byte_value(pc.multiplier_quotient, MULTIPLIER_QUOTIENT_SIZE));
+
+    printf("Combined Int: %lld\n\n",compute_multiplier_accumulator(&pc));
 
     free(address_word);
     free(instruction_string);

@@ -15,7 +15,7 @@ void generate_opcodes(struct opcode opcodes[]);
 void create_instruction(struct program_counter *pc,int* Machine_Memory, struct opcode command_opcode, int address);
 void display_opcodes();
 void print_binary(int value);
-struct opcode get_opcode(char* code, struct opcode opcodes[]);
+struct opcode get_opcode(char* code, struct opcode *opcodes, int in_size);
 
 
 #endif

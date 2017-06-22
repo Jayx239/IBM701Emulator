@@ -31,7 +31,7 @@ save - save contents of the memory registers
 
 jump # - this command followed by a number will jump the program counter to that memory address
 
-run - executes 10 instructions displaying the register contents each execution
+run - executes instructions continuously displaying the register contents each execution. Type ctrl-z to stop execution.
 
 
 ### Architecture:
@@ -144,14 +144,14 @@ opcode|address     |opcode|address     |
 
 Accumulator
 __________________________________________
-S|Q|P|value                               |
-0 0 1 101010101010101010101010101010101010|
+value                               |S|Q|P|
+001101010101010101010101010101010101 0 1 0|
 ------------------------------------------|
 
 Multpilier_quotient:
 ______________________________________
-S|Value                               |
-1 101010101010101010101010101010101010|
+Value                               |s|
+101010101010101010101010101010101010 1|
 --------------------------------------|
 
 * currently the emulator only supports full word addressing, the defense calculator
